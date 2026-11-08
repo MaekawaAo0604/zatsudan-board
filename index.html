@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>雑談ボード</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>雑談ボード</h1>
+    <nav class="day-nav" aria-label="日付">
+      <button type="button" id="prev-day" class="icon-btn" aria-label="前の日">‹</button>
+      <span id="current-date" class="current-date"></span>
+      <button type="button" id="next-day" class="icon-btn" aria-label="次の日">›</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <p class="notice">押した数とおすすめは、今はこのブラウザの中だけに保存されます。</p>
+
+    <div class="toolbar">
+      <label class="sort">
+        並び順
+        <select id="sort-order">
+          <option value="default">追加順</option>
+          <option value="count">押された数が多い順</option>
+        </select>
+      </label>
+    </div>
+
+    <p id="status" class="status" role="status"></p>
+    <ul id="topic-list" class="topic-list"></ul>
+
+    <section class="suggest" aria-labelledby="suggest-title">
+      <h2 id="suggest-title">おすすめのネタを足す</h2>
+      <form id="suggest-form">
+        <label>
+          ネタ
+          <input name="title" required maxlength="80" placeholder="例：最近買ってよかったもの">
+        </label>
+        <label>
+          ひとこと（任意）
+          <input name="detail" maxlength="140" placeholder="話したい理由など">
+        </label>
+        <label>
+          名前（任意）
+          <input name="author" maxlength="30">
+        </label>
+        <button type="submit" class="primary-btn">追加する</button>
+      </form>
+    </section>
+  </main>
+
+  <template id="topic-template">
+    <li class="topic">
+      <div class="topic-body">
+        <div class="topic-meta">
+          <span class="badge"></span>
+          <span class="author"></span>
+        </div>
+        <h3 class="topic-title"></h3>
+        <p class="topic-detail"></p>
+      </div>
+      <div class="topic-actions">
+        <button type="button" class="vote-btn">
+          話したい <span class="count">0</span>
+        </button>
+        <button type="button" class="undo-btn" aria-label="1つ減らす">−1</button>
+        <button type="button" class="delete-btn">削除</button>
+      </div>
+    </li>
+  </template>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

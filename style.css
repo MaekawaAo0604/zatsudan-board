@@ -1,0 +1,171 @@
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --text: #22211f;
+  --muted: #6b6862;
+  --border: #e2dfd8;
+  --accent: #d9622b;
+  --accent-text: #ffffff;
+  --accent-soft: #fbe9df;
+  --suggest: #2f7a5f;
+  --suggest-soft: #e2f1ea;
+  --radius: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1918;
+    --surface: #242321;
+    --text: #ecebe8;
+    --muted: #a19d96;
+    --border: #3a3835;
+    --accent: #f08a55;
+    --accent-text: #1a1918;
+    --accent-soft: #3b2a20;
+    --suggest: #6cc4a1;
+    --suggest-soft: #1f3129;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  line-height: 1.6;
+}
+
+button, input, select { font: inherit; color: inherit; }
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 16px max(16px, calc((100% - 720px) / 2));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+h1 { margin: 0; font-size: 1.25rem; }
+
+.day-nav { display: flex; align-items: center; gap: 8px; }
+.current-date { font-weight: 600; min-width: 11em; text-align: center; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+
+.container { max-width: 720px; margin: 0 auto; padding: 16px; }
+
+.notice { margin: 0 0 12px; font-size: 0.85rem; color: var(--muted); }
+
+.toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.sort { font-size: 0.9rem; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+.sort select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.status:empty { display: none; }
+.status { color: var(--muted); }
+
+.topic-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+.topic {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.topic.is-voted { border-color: var(--accent); }
+
+.topic-body { min-width: 0; }
+.topic-meta { display: flex; gap: 8px; align-items: center; font-size: 0.75rem; }
+.badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.is-suggestion .badge { background: var(--suggest-soft); color: var(--suggest); }
+.author { color: var(--muted); }
+.topic-title { margin: 4px 0 0; font-size: 1.05rem; overflow-wrap: anywhere; }
+.topic-detail { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+
+.topic-actions { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex-shrink: 0; }
+
+.vote-btn {
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.is-voted .vote-btn { background: var(--accent); color: var(--accent-text); }
+.count { font-variant-numeric: tabular-nums; margin-left: 4px; }
+
+.undo-btn, .delete-btn {
+  padding: 2px 8px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.undo-btn:disabled { visibility: hidden; }
+.delete-btn[hidden] { display: none; }
+
+.suggest {
+  margin-top: 32px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.suggest h2 { margin: 0 0 12px; font-size: 1rem; }
+.suggest form { display: grid; gap: 12px; }
+.suggest label { display: grid; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.suggest input {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.primary-btn {
+  justify-self: start;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--suggest);
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .topic { flex-direction: column; align-items: stretch; }
+  .topic-actions { flex-direction: row; align-items: center; }
+  .current-date { min-width: 0; }
+}
