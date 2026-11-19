@@ -69,7 +69,40 @@ h1 { margin: 0; font-size: 1.25rem; }
 
 .notice { margin: 0 0 12px; font-size: 0.85rem; color: var(--muted); }
 
-.toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pick-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+.pick-btn:disabled { opacity: 0.35; cursor: default; }
+
+.pick-result:empty { display: none; }
+.pick-result {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.topic.is-picked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
 .sort { font-size: 0.9rem; color: var(--muted); display: flex; gap: 8px; align-items: center; }
 .sort select {
   padding: 4px 8px;

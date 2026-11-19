@@ -9,10 +9,13 @@ const els = {
   list: document.getElementById("topic-list"),
   form: document.getElementById("suggest-form"),
   template: document.getElementById("topic-template"),
+  pick: document.getElementById("random-pick"),
+  pickResult: document.getElementById("pick-result"),
 };
 
 let days = []; // data/topics.json の days（日付の昇順）
 let dayIndex = -1;
+let pickedId = null; // ランダムに選ばれたネタの id（日付を移ると消える）
 
 function todayString() {
   const d = new Date();
@@ -45,6 +48,9 @@ async function render() {
   els.next.disabled = dayIndex < 0 || dayIndex >= days.length - 1;
 
   const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
+  els.pick.disabled = base.length === 0;
+  const picked = base.find((t) => t.id === pickedId);
+  els.pickResult.textContent = picked ? `今日はこれ：「${picked.title}」` : "";
   const suggestions = await store.getSuggestions(date);
   const counts = await store.getCounts(date);
 
@@ -67,6 +73,7 @@ function renderTopic(topic, date, count) {
   const node = els.template.content.firstElementChild.cloneNode(true);
   const isSuggestion = topic.kind === "suggestion";
   node.classList.toggle("is-suggestion", isSuggestion);
+  node.classList.toggle("is-picked", !isSuggestion && topic.id === pickedId);
   node.querySelector(".badge").textContent = isSuggestion ? "おすすめ" : "今日のネタ";
   node.querySelector(".author").textContent = isSuggestion && topic.author ? `${topic.author} さん` : "";
   node.querySelector(".topic-title").textContent = topic.title;
@@ -103,10 +110,20 @@ function renderTopic(topic, date, count) {
 }
 
 els.prev.addEventListener("click", () => {
-  if (dayIndex > 0) { dayIndex--; render(); }
+  if (dayIndex > 0) { dayIndex--; pickedId = null; render(); }
 });
 els.next.addEventListener("click", () => {
-  if (dayIndex < days.length - 1) { dayIndex++; render(); }
+  if (dayIndex < days.length - 1) { dayIndex++; pickedId = null; render(); }
+});
+
+// 表示中の日の「今日のネタ」から1つ選ぶ。2つ以上あれば直前と同じものは避ける
+els.pick.addEventListener("click", async () => {
+  const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
+  const candidates = base.length > 1 ? base.filter((t) => t.id !== pickedId) : base;
+  if (!candidates.length) return;
+  pickedId = candidates[Math.floor(Math.random() * candidates.length)].id;
+  await render();
+  els.list.querySelector(".is-picked")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
 els.sort.addEventListener("change", render);
 
