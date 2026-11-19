@@ -11,6 +11,7 @@ const els = {
   template: document.getElementById("topic-template"),
   pick: document.getElementById("random-pick"),
   pickResult: document.getElementById("pick-result"),
+  copy: document.getElementById("copy-topics"),
 };
 
 let days = []; // data/topics.json の days（日付の昇順）
@@ -49,6 +50,7 @@ async function render() {
 
   const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
   els.pick.disabled = base.length === 0;
+  els.copy.disabled = base.length === 0;
   const picked = base.find((t) => t.id === pickedId);
   els.pickResult.textContent = picked ? `今日はこれ：「${picked.title}」` : "";
   const suggestions = await store.getSuggestions(date);
@@ -161,6 +163,46 @@ els.form.addEventListener("submit", async (e) => {
   });
   els.form.reset();
   render();
+});
+
+// LINE や Slack にそのまま貼れる、飾りのない文字だけのまとめを作る
+async function buildCopyText() {
+  const date = currentDate();
+  const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
+  const done = new Set(await store.getDone(date));
+  const lines = base.map((t) => {
+    const detail = t.detail ? `（${t.detail}）` : "";
+    const mark = done.has(t.id) ? " ✓話した" : "";
+    return `・${t.title}${detail}${mark}`;
+  });
+  return [`${formatDate(date)}の雑談ネタ`, ...lines].join("\n");
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // clipboard API が使えない環境向けの昔ながらの方法
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.append(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    return ok;
+  }
+}
+
+let copyResetTimer;
+els.copy.addEventListener("click", async () => {
+  const ok = await copyText(await buildCopyText());
+  els.copy.textContent = ok ? "コピーしました" : "コピーできませんでした";
+  clearTimeout(copyResetTimer);
+  copyResetTimer = setTimeout(() => { els.copy.textContent = "まとめてコピー"; }, 2000);
 });
 
 async function init() {

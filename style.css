@@ -89,6 +89,19 @@ h1 { margin: 0; font-size: 1.25rem; }
 }
 .pick-btn:disabled { opacity: 0.35; cursor: default; }
 
+.toolbar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.copy-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.copy-btn:disabled { opacity: 0.35; cursor: default; }
+
 .pick-result:empty { display: none; }
 .pick-result {
   margin: 0 0 12px;
