@@ -20,6 +20,8 @@ python3 -m http.server 8000
 | `index.html` | 画面 |
 | `style.css` | 見た目 |
 | `app.js` | 表示と操作 |
+| `board.js` | ランダムに選ぶ・まとめてコピーの決めごと（テストで確かめている） |
+| `tests/` | テスト |
 | `store.js` | 押した数とおすすめの保存（今はブラウザの localStorage） |
 | `data/topics.json` | 毎日のネタ |
 
@@ -47,6 +49,16 @@ Claude Code で `/add-daily-topics` と入力するか、「今日のネタを�
 ```bash
 node .claude/skills/add-daily-topics/validate.mjs data/topics.json
 ```
+
+## テスト
+
+Node だけで動きます（パッケージのインストールは不要）。
+
+```bash
+node --test "tests/*.test.mjs"
+```
+
+Claude Code でファイルを編集すると、Hooks でこのテストが自動で実行されます（`.claude/settings.json`）。
 
 ## 今の制限
 

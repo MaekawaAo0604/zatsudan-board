@@ -1,4 +1,5 @@
 import * as store from "./store.js";
+import { formatDate, dailyTopics, pickTopic, buildCopyText } from "./board.js";
 
 const els = {
   date: document.getElementById("current-date"),
@@ -24,12 +25,6 @@ function todayString() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function formatDate(date) {
-  const [y, m, d] = date.split("-").map(Number);
-  const week = "日月火水木金土"[new Date(y, m - 1, d).getDay()];
-  return `${y}年${m}月${d}日（${week}）`;
-}
-
 async function loadDays() {
   const res = await fetch("data/topics.json", { cache: "no-store" });
   if (!res.ok) throw new Error(`data/topics.json を読めませんでした（${res.status}）`);
@@ -48,7 +43,7 @@ async function render() {
   els.prev.disabled = dayIndex <= 0;
   els.next.disabled = dayIndex < 0 || dayIndex >= days.length - 1;
 
-  const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
+  const base = dailyTopics(days[dayIndex]);
   els.pick.disabled = base.length === 0;
   els.copy.disabled = base.length === 0;
   const picked = base.find((t) => t.id === pickedId);
@@ -132,20 +127,22 @@ els.next.addEventListener("click", () => {
   if (dayIndex < days.length - 1) { dayIndex++; pickedId = null; render(); }
 });
 
-// 表示中の日の「今日のネタ」のうち、まだ話していないものから1つ選ぶ。
-// 2つ以上あれば直前と同じものは避ける
+// 選び方の決めごとは board.js の pickTopic にある（tests/board.test.mjs で確かめている）
 els.pick.addEventListener("click", async () => {
-  const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
-  const done = new Set(await store.getDone(currentDate()));
-  const remaining = base.filter((t) => !done.has(t.id));
-  if (!remaining.length) {
+  const date = currentDate();
+  const picked = pickTopic({
+    day: days[dayIndex],
+    suggestions: await store.getSuggestions(date),
+    doneIds: await store.getDone(date),
+    previousId: pickedId,
+  });
+  if (!picked) {
     pickedId = null;
     await render();
     els.pickResult.textContent = "今日のネタはぜんぶ話し終えました。";
     return;
   }
-  const candidates = remaining.length > 1 ? remaining.filter((t) => t.id !== pickedId) : remaining;
-  pickedId = candidates[Math.floor(Math.random() * candidates.length)].id;
+  pickedId = picked.id;
   await render();
   els.list.querySelector(".is-picked")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
@@ -164,19 +161,6 @@ els.form.addEventListener("submit", async (e) => {
   els.form.reset();
   render();
 });
-
-// LINE や Slack にそのまま貼れる、飾りのない文字だけのまとめを作る
-async function buildCopyText() {
-  const date = currentDate();
-  const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
-  const done = new Set(await store.getDone(date));
-  const lines = base.map((t) => {
-    const detail = t.detail ? `（${t.detail}）` : "";
-    const mark = done.has(t.id) ? " ✓話した" : "";
-    return `・${t.title}${detail}${mark}`;
-  });
-  return [`${formatDate(date)}の雑談ネタ`, ...lines].join("\n");
-}
 
 async function copyText(text) {
   try {
@@ -199,7 +183,15 @@ async function copyText(text) {
 
 let copyResetTimer;
 els.copy.addEventListener("click", async () => {
-  const ok = await copyText(await buildCopyText());
+  // まとめの中身の決めごとは board.js の buildCopyText にある
+  const date = currentDate();
+  const text = buildCopyText({
+    date,
+    day: days[dayIndex],
+    suggestions: await store.getSuggestions(date),
+    doneIds: await store.getDone(date),
+  });
+  const ok = await copyText(text);
   els.copy.textContent = ok ? "コピーしました" : "コピーできませんでした";
   clearTimeout(copyResetTimer);
   copyResetTimer = setTimeout(() => { els.copy.textContent = "まとめてコピー"; }, 2000);

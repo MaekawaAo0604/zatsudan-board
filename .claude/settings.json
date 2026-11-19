@@ -3,5 +3,20 @@
     "allow": [
       "Edit(/data/topics.json)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/run-tests.sh\"",
+            "timeout": 60,
+            "statusMessage": "テストを実行中"
+          }
+        ]
+      }
+    ]
   }
 }
