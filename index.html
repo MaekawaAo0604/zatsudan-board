@@ -17,7 +17,7 @@
   </header>
 
   <main class="container">
-    <p class="notice">押した数とおすすめは、今はこのブラウザの中だけに保存されます。</p>
+    <p class="notice">押した数・「話した」の印・おすすめは、今はこのブラウザの中だけに保存されます。</p>
 
     <div class="toolbar">
       <button type="button" id="random-pick" class="pick-btn">ランダムに1つ選ぶ</button>
@@ -60,6 +60,7 @@
         <div class="topic-meta">
           <span class="badge"></span>
           <span class="author"></span>
+          <span class="done-label" hidden>✓ 話した</span>
         </div>
         <h3 class="topic-title"></h3>
         <p class="topic-detail"></p>
@@ -69,6 +70,7 @@
           話したい <span class="count">0</span>
         </button>
         <button type="button" class="undo-btn" aria-label="1つ減らす">−1</button>
+        <button type="button" class="done-btn" aria-pressed="false">話した</button>
         <button type="button" class="delete-btn">削除</button>
       </div>
     </li>

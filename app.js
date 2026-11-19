@@ -53,6 +53,7 @@ async function render() {
   els.pickResult.textContent = picked ? `今日はこれ：「${picked.title}」` : "";
   const suggestions = await store.getSuggestions(date);
   const counts = await store.getCounts(date);
+  const done = new Set(await store.getDone(date));
 
   let topics = [
     ...base.map((t) => ({ ...t, kind: "daily" })),
@@ -66,10 +67,10 @@ async function render() {
   }
 
   els.status.textContent = topics.length ? "" : "この日のネタはまだありません。下から足せます。";
-  els.list.replaceChildren(...topics.map((t) => renderTopic(t, date, counts[t.id] ?? 0)));
+  els.list.replaceChildren(...topics.map((t) => renderTopic(t, date, counts[t.id] ?? 0, done.has(t.id))));
 }
 
-function renderTopic(topic, date, count) {
+function renderTopic(topic, date, count, isDone) {
   const node = els.template.content.firstElementChild.cloneNode(true);
   const isSuggestion = topic.kind === "suggestion";
   node.classList.toggle("is-suggestion", isSuggestion);
@@ -99,6 +100,19 @@ function renderTopic(topic, date, count) {
     if (els.sort.value === "count") render();
   });
 
+  const doneBtn = node.querySelector(".done-btn");
+  const doneLabel = node.querySelector(".done-label");
+  const setDone = (d) => {
+    node.classList.toggle("is-done", d);
+    doneBtn.textContent = d ? "話したを取り消す" : "話した";
+    doneBtn.setAttribute("aria-pressed", String(d));
+    doneLabel.hidden = !d;
+  };
+  setDone(isDone);
+  doneBtn.addEventListener("click", async () => {
+    setDone(await store.setDone(date, topic.id, !node.classList.contains("is-done")));
+  });
+
   const del = node.querySelector(".delete-btn");
   del.hidden = !isSuggestion;
   del.addEventListener("click", async () => {
@@ -116,11 +130,19 @@ els.next.addEventListener("click", () => {
   if (dayIndex < days.length - 1) { dayIndex++; pickedId = null; render(); }
 });
 
-// 表示中の日の「今日のネタ」から1つ選ぶ。2つ以上あれば直前と同じものは避ける
+// 表示中の日の「今日のネタ」のうち、まだ話していないものから1つ選ぶ。
+// 2つ以上あれば直前と同じものは避ける
 els.pick.addEventListener("click", async () => {
   const base = dayIndex >= 0 ? days[dayIndex].topics ?? [] : [];
-  const candidates = base.length > 1 ? base.filter((t) => t.id !== pickedId) : base;
-  if (!candidates.length) return;
+  const done = new Set(await store.getDone(currentDate()));
+  const remaining = base.filter((t) => !done.has(t.id));
+  if (!remaining.length) {
+    pickedId = null;
+    await render();
+    els.pickResult.textContent = "今日のネタはぜんぶ話し終えました。";
+    return;
+  }
+  const candidates = remaining.length > 1 ? remaining.filter((t) => t.id !== pickedId) : remaining;
   pickedId = candidates[Math.floor(Math.random() * candidates.length)].id;
   await render();
   els.list.querySelector(".is-picked")?.scrollIntoView({ behavior: "smooth", block: "nearest" });

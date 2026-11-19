@@ -32,6 +32,18 @@ export async function changeCount(date, topicId, delta) {
   return counts[topicId];
 }
 
+// 話し終えたネタの id の一覧
+export async function getDone(date) {
+  return read(`done:${date}`, []);
+}
+
+export async function setDone(date, topicId, done) {
+  const list = read(`done:${date}`, []).filter((id) => id !== topicId);
+  if (done) list.push(topicId);
+  write(`done:${date}`, list);
+  return done;
+}
+
 export async function getSuggestions(date) {
   return read(`suggestions:${date}`, []);
 }
