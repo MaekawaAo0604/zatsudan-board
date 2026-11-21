@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Edit(/data/topics.json)"
+      "Edit(/data/topics.json)",
+      "Bash(bash .claude/skills/add-daily-topics/push-today.sh *)"
     ]
   },
   "hooks": {
