@@ -48,10 +48,14 @@ export async function getSuggestions(date) {
   return read(`suggestions:${date}`, []);
 }
 
+function newId(prefix) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
 export async function addSuggestion(date, { title, detail, author }) {
   const list = read(`suggestions:${date}`, []);
   const item = {
-    id: `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+    id: newId("s"),
     title,
     detail,
     author,
@@ -64,4 +68,23 @@ export async function addSuggestion(date, { title, detail, author }) {
 export async function removeSuggestion(date, id) {
   const list = read(`suggestions:${date}`, []).filter((s) => s.id !== id);
   write(`suggestions:${date}`, list);
+}
+
+// おすすめのコメントを書き換えて、書き換えたあとの一覧を返す。
+// おすすめがもうなければ（別のタブで削除したときなど）null を返す。
+function updateComments(date, suggestionId, update) {
+  const list = read(`suggestions:${date}`, []);
+  const item = list.find((s) => s.id === suggestionId);
+  if (!item) return null;
+  item.comments = update(item.comments ?? []); // コメント機能より前に足したおすすめには comments がない
+  write(`suggestions:${date}`, list);
+  return item.comments;
+}
+
+export async function addComment(date, suggestionId, text) {
+  return updateComments(date, suggestionId, (comments) => [...comments, { id: newId("c"), text }]);
+}
+
+export async function removeComment(date, suggestionId, commentId) {
+  return updateComments(date, suggestionId, (comments) => comments.filter((c) => c.id !== commentId));
 }

@@ -10,6 +10,7 @@ const els = {
   list: document.getElementById("topic-list"),
   form: document.getElementById("suggest-form"),
   template: document.getElementById("topic-template"),
+  commentTemplate: document.getElementById("comment-template"),
   pick: document.getElementById("random-pick"),
   pickResult: document.getElementById("pick-result"),
   copy: document.getElementById("copy-topics"),
@@ -18,6 +19,7 @@ const els = {
 let days = []; // data/topics.json の days（日付の昇順）
 let dayIndex = -1;
 let pickedId = null; // ランダムに選ばれたネタの id（日付を移ると消える）
+const commentDrafts = new Map(); // 書きかけのコメント。一覧を描き直しても消えないようにする
 
 function todayString() {
   const d = new Date();
@@ -117,7 +119,47 @@ function renderTopic(topic, date, count, isDone) {
     await store.removeSuggestion(date, topic.id);
     render();
   });
+
+  if (isSuggestion) setUpComments(node, topic, date);
   return node;
+}
+
+function setUpComments(node, topic, date) {
+  const list = node.querySelector(".comment-list");
+  const form = node.querySelector(".comment-form");
+  const input = node.querySelector(".comment-input");
+  const draftKey = `${date}:${topic.id}`;
+
+  const show = (comments) => {
+    list.hidden = comments.length === 0;
+    list.replaceChildren(...comments.map((comment) => {
+      const item = els.commentTemplate.content.firstElementChild.cloneNode(true);
+      item.querySelector(".comment-text").textContent = comment.text;
+      item.querySelector(".comment-delete").addEventListener("click", async () => {
+        if (!confirm(`コメント「${comment.text}」を削除しますか？`)) return;
+        const next = await store.removeComment(date, topic.id, comment.id);
+        if (!next) return render();
+        show(next);
+        input.focus();
+      });
+      return item;
+    }));
+  };
+  show(topic.comments ?? []);
+
+  input.value = commentDrafts.get(draftKey) ?? "";
+  input.addEventListener("input", () => commentDrafts.set(draftKey, input.value));
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    const next = await store.addComment(date, topic.id, text);
+    if (!next) return render();
+    commentDrafts.delete(draftKey);
+    input.value = "";
+    show(next);
+  });
+  node.querySelector(".comments").hidden = false;
 }
 
 els.prev.addEventListener("click", () => {

@@ -17,7 +17,7 @@
   </header>
 
   <main class="container">
-    <p class="notice">押した数・「話した」の印・おすすめは、今はこのブラウザの中だけに保存されます。</p>
+    <p class="notice">押した数・「話した」の印・おすすめとそのコメントは、今はこのブラウザの中だけに保存されます。</p>
 
     <div class="toolbar">
       <div class="toolbar-actions">
@@ -67,6 +67,13 @@
         </div>
         <h3 class="topic-title"></h3>
         <p class="topic-detail"></p>
+        <div class="comments" hidden>
+          <ul class="comment-list" aria-label="コメント"></ul>
+          <form class="comment-form">
+            <input class="comment-input" maxlength="140" placeholder="コメントを書き足す" aria-label="コメントを書き足す">
+            <button type="submit" class="comment-add">書き足す</button>
+          </form>
+        </div>
       </div>
       <div class="topic-actions">
         <button type="button" class="vote-btn">
@@ -76,6 +83,13 @@
         <button type="button" class="done-btn" aria-pressed="false">話した</button>
         <button type="button" class="delete-btn">削除</button>
       </div>
+    </li>
+  </template>
+
+  <template id="comment-template">
+    <li class="comment">
+      <span class="comment-text"></span>
+      <button type="button" class="comment-delete" aria-label="このコメントを削除">削除</button>
     </li>
   </template>
 
