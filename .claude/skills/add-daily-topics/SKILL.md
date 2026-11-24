@@ -34,10 +34,10 @@ bash .claude/skills/add-daily-topics/prepare-main.sh
 ## 1. 今日の日付と現状を確かめる
 
 1. リポジトリのルートで作業する（`data/topics.json` があるフォルダ）。
-2. 今日の日付をこのパソコンの時刻で取る（例 `2026-11-09`）：
+2. 今日の日付を、日本の日付で取る（例 `2026-11-09`）。`date +%F` は使わない（クラウドの時計は UTC なので、朝9時より前は前の日になる）：
 
    ```bash
-   date +%F
+   bash .claude/skills/add-daily-topics/today.sh
    ```
 
 3. `data/topics.json` を Read で読む。形式は README の「毎日のネタの形式」のとおり。

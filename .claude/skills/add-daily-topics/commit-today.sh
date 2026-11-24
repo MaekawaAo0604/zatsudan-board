@@ -23,7 +23,7 @@ staged=$(git diff --cached --name-only)
 
 [ -n "$(git status --porcelain -- data/topics.json)" ] || fail "data/topics.json に変更がない"
 
-today=$(date +%F)
+today=$(bash .claude/skills/add-daily-topics/today.sh) || fail "今日の日付を取れない"
 
 git add data/topics.json || fail "data/topics.json をステージできない"
 git commit -q -m "今日の雑談ネタを追加 (${today})" -m "Co-Authored-By: Claude <noreply@anthropic.com>" || fail "コミットできない"

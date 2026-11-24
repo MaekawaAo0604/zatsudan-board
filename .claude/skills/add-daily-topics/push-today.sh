@@ -22,7 +22,7 @@ want=$(git rev-parse --verify -q "$1^{commit}") || fail "コミット $1 が見�
 head=$(git rev-parse HEAD)
 [ "$head" = "$want" ] || fail "いちばん新しいコミットが、渡したコミットではない"
 
-today=$(date +%F)
+today=$(bash .claude/skills/add-daily-topics/today.sh) || fail "今日の日付を取れない"
 subject=$(git log -1 --format=%s HEAD)
 [ "$subject" = "今日の雑談ネタを追加 ($today)" ] || fail "今日のネタのコミットではない（件名：${subject}）"
 

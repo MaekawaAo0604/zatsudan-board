@@ -3,7 +3,7 @@
     "allow": [
       "Edit(/data/topics.json)",
       "Bash(bash .claude/skills/add-daily-topics/prepare-main.sh)",
-      "Bash(date +%F)",
+      "Bash(bash .claude/skills/add-daily-topics/today.sh)",
       "Bash(git status --short)",
       "Bash(node .claude/skills/add-daily-topics/validate.mjs data/topics.json)",
       "Bash(git checkout -- data/topics.json)",
