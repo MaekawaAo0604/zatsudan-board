@@ -1,5 +1,7 @@
-import * as store from "./store.js";
-import { formatDate, dailyTopics, pickTopic, buildCopyText } from "./board.js";
+// ?v= は版の印。GitHub Pages は各ファイルを10分キャッシュするので、新旧のファイルが混ざらないよう、
+// 変えたときは index.html・app.js・store.js の ?v= をそろえて上げる
+import * as store from "./store.js?v=20261124";
+import { formatDate, dailyTopics, pickTopic, buildCopyText } from "./board.js?v=20261124";
 
 const els = {
   date: document.getElementById("current-date"),
@@ -7,6 +9,7 @@ const els = {
   next: document.getElementById("next-day"),
   sort: document.getElementById("sort-order"),
   status: document.getElementById("status"),
+  voteStatus: document.getElementById("vote-status"),
   list: document.getElementById("topic-list"),
   form: document.getElementById("suggest-form"),
   template: document.getElementById("topic-template"),
@@ -20,6 +23,67 @@ let days = []; // data/topics.json の days（日付の昇順）
 let dayIndex = -1;
 let pickedId = null; // ランダムに選ばれたネタの id（日付を移ると消える）
 const commentDrafts = new Map(); // 書きかけのコメント。一覧を描き直しても消えないようにする
+
+// 「話したい」。1人1回で、もう一度押すと取り消す。
+// 毎朝のネタの分はみんなで共有し、Firebase から届くたびに数字だけを書き換える（一覧は待たずに先に描く）。
+// おすすめの分はこのブラウザだけ。
+let sharedVotes = { status: "loading", counts: {}, mine: new Set() };
+let stopWatchingVotes = () => {};
+let localVotes = new Set();
+const sendingVotes = new Set(); // 届け中のネタの id（二度押しを防ぐ）
+let voteError = "";
+
+const MESSAGE_UNAVAILABLE = "毎朝のネタの「話したい」の数を読み込めませんでした。ネタの一覧とほかのボタンはそのまま使えます。";
+const MESSAGE_SEND_FAILED = "「話したい」を届けられませんでした。少し待ってから、もう一度押してください。";
+
+function watchVotes(date) {
+  stopWatchingVotes();
+  sharedVotes = { status: "loading", counts: {}, mine: new Set() };
+  voteError = "";
+  stopWatchingVotes = store.watchDailyVotes(date, (state) => {
+    sharedVotes = { counts: {}, mine: new Set(), ...state };
+    updateVotes();
+  });
+}
+
+function voteInfo(topic) {
+  if (topic.kind === "suggestion") {
+    const mine = localVotes.has(topic.id);
+    return { available: true, count: mine ? 1 : 0, mine };
+  }
+  return {
+    available: sharedVotes.status === "ready",
+    count: sharedVotes.counts[topic.id] ?? 0,
+    mine: sharedVotes.mine.has(topic.id),
+  };
+}
+
+// 一覧は作り直さず、数字と押した色だけを書き換える（コメントの書きかけや入力中の位置を失わないため）
+function updateVotes() {
+  const nodes = [...els.list.children];
+  for (const node of nodes) {
+    const info = voteInfo(node.topic);
+    const btn = node.querySelector(".vote-btn");
+    const label = sharedVotes.status === "loading" ? "…" : "—";
+    node.querySelector(".count").textContent = info.available ? info.count : label;
+    btn.disabled = !info.available || sendingVotes.has(node.topic.id);
+    btn.setAttribute("aria-pressed", String(info.available && info.mine));
+    node.classList.toggle("is-voted", info.available && info.mine);
+  }
+  const hasDaily = nodes.some((node) => node.topic.kind === "daily");
+  const message = voteError || (hasDaily && sharedVotes.status === "unavailable" ? MESSAGE_UNAVAILABLE : "");
+  // 公開直後に古い index.html がキャッシュに残っていると、この欄がない。そのときも止まらないようにする
+  if (els.voteStatus) els.voteStatus.textContent = message;
+  sortNodes(nodes);
+}
+
+// 並び順を数に合わせる。順番が変わらなければ動かさない（動かすと入力中の欄から外れるため）
+function sortNodes(nodes) {
+  const byCount = els.sort.value === "count";
+  const countOf = (node) => (voteInfo(node.topic).available ? voteInfo(node.topic).count : 0);
+  const sorted = [...nodes].sort((a, b) => (byCount ? countOf(b) - countOf(a) : 0) || a.order - b.order);
+  if (sorted.some((node, i) => node !== nodes[i])) els.list.append(...sorted);
+}
 
 function todayString() {
   const d = new Date();
@@ -50,27 +114,26 @@ async function render() {
   els.copy.disabled = base.length === 0;
   const picked = base.find((t) => t.id === pickedId);
   els.pickResult.textContent = picked ? `今日はこれ：「${picked.title}」` : "";
+  // ここで読むのはこのブラウザの中の分だけ。共有の「話したい」は待たない
   const suggestions = await store.getSuggestions(date);
-  const counts = await store.getCounts(date);
+  const local = await store.getLocalVotes(date);
   const done = new Set(await store.getDone(date));
+  if (date !== currentDate()) return; // 読んでいるあいだに日付を移った
 
-  let topics = [
+  localVotes = local;
+  const topics = [
     ...base.map((t) => ({ ...t, kind: "daily" })),
     ...suggestions.map((s) => ({ ...s, kind: "suggestion" })),
   ];
-  if (els.sort.value === "count") {
-    topics = topics
-      .map((t, i) => ({ t, i }))
-      .sort((a, b) => (counts[b.t.id] ?? 0) - (counts[a.t.id] ?? 0) || a.i - b.i)
-      .map(({ t }) => t);
-  }
-
   els.status.textContent = topics.length ? "" : "この日のネタはまだありません。下から足せます。";
-  els.list.replaceChildren(...topics.map((t) => renderTopic(t, date, counts[t.id] ?? 0, done.has(t.id))));
+  els.list.replaceChildren(...topics.map((t, i) => renderTopic(t, date, i, done.has(t.id))));
+  updateVotes();
 }
 
-function renderTopic(topic, date, count, isDone) {
+function renderTopic(topic, date, order, isDone) {
   const node = els.template.content.firstElementChild.cloneNode(true);
+  node.topic = topic;
+  node.order = order;
   const isSuggestion = topic.kind === "suggestion";
   node.classList.toggle("is-suggestion", isSuggestion);
   node.classList.toggle("is-picked", !isSuggestion && topic.id === pickedId);
@@ -81,22 +144,28 @@ function renderTopic(topic, date, count, isDone) {
   detail.textContent = topic.detail ?? "";
   detail.hidden = !topic.detail;
 
-  const countEl = node.querySelector(".count");
-  const undo = node.querySelector(".undo-btn");
-  const setCount = (n) => {
-    countEl.textContent = n;
-    undo.disabled = n === 0;
-    node.classList.toggle("is-voted", n > 0);
-  };
-  setCount(count);
-
   node.querySelector(".vote-btn").addEventListener("click", async () => {
-    setCount(await store.changeCount(date, topic.id, 1));
-    if (els.sort.value === "count") render();
-  });
-  undo.addEventListener("click", async () => {
-    setCount(await store.changeCount(date, topic.id, -1));
-    if (els.sort.value === "count") render();
+    const info = voteInfo(topic);
+    if (!info.available || sendingVotes.has(topic.id)) return;
+    voteError = "";
+    if (isSuggestion) {
+      await store.setLocalVote(date, topic.id, !info.mine);
+      if (info.mine) localVotes.delete(topic.id);
+      else localVotes.add(topic.id);
+      updateVotes();
+      return;
+    }
+    sendingVotes.add(topic.id);
+    updateVotes();
+    try {
+      // 数は Firebase から届いた分で書き換わる。ここでは足し引きしない
+      await store.setDailyVote(date, topic.id, !info.mine);
+    } catch {
+      if (date === currentDate()) voteError = MESSAGE_SEND_FAILED;
+    } finally {
+      sendingVotes.delete(topic.id);
+      updateVotes();
+    }
   });
 
   const doneBtn = node.querySelector(".done-btn");
@@ -162,11 +231,18 @@ function setUpComments(node, topic, date) {
   node.querySelector(".comments").hidden = false;
 }
 
+function showDay(index) {
+  dayIndex = index;
+  pickedId = null;
+  watchVotes(currentDate());
+  render();
+}
+
 els.prev.addEventListener("click", () => {
-  if (dayIndex > 0) { dayIndex--; pickedId = null; render(); }
+  if (dayIndex > 0) showDay(dayIndex - 1);
 });
 els.next.addEventListener("click", () => {
-  if (dayIndex < days.length - 1) { dayIndex++; pickedId = null; render(); }
+  if (dayIndex < days.length - 1) showDay(dayIndex + 1);
 });
 
 // 選び方の決めごとは board.js の pickTopic にある（tests/board.test.mjs で確かめている）
@@ -188,7 +264,7 @@ els.pick.addEventListener("click", async () => {
   await render();
   els.list.querySelector(".is-picked")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
-els.sort.addEventListener("change", render);
+els.sort.addEventListener("change", () => sortNodes([...els.list.children]));
 
 els.form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -249,8 +325,7 @@ async function init() {
   // 今日の分があれば今日、なければ一番新しい日を表示する
   const today = todayString();
   const i = days.findIndex((d) => d.date === today);
-  dayIndex = i >= 0 ? i : days.length - 1;
-  await render();
+  showDay(i >= 0 ? i : days.length - 1);
 }
 
 init();

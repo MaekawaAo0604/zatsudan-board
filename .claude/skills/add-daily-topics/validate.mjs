@@ -34,6 +34,8 @@ if (!Array.isArray(data?.days)) {
     day.topics.forEach((t, j) => {
       const w = `${where}.topics[${j}]`;
       if (typeof t?.id !== "string" || !t.id) errors.push(`${w}.id がありません`);
+      // firestore.rules が「日付-数字」の形を前提にしている（外れると「話したい」を押せない）
+      else if (!new RegExp(`^${day.date}-\\d{1,3}$`).test(t.id)) errors.push(`${w}.id ${t.id} が「${day.date}-連番」の形ではありません`);
       else if (ids.has(t.id)) errors.push(`${w}.id ${t.id} が重複しています`);
       else ids.add(t.id);
       if (typeof t?.title !== "string" || !t.title.trim()) errors.push(`${w}.title がありません`);

@@ -53,6 +53,19 @@ test("コメント：ほかのおすすめや、ほかの日には影響しな�
   assert.deepEqual(await store.getSuggestions("2026-11-21"), []);
 });
 
+test("おすすめの話したい：1人1回で、押す・取り消すができる", async () => {
+  await store.setLocalVote(date, "s-1", true);
+  await store.setLocalVote(date, "s-1", true);
+  assert.deepEqual([...(await store.getLocalVotes(date))], ["s-1"]);
+  await store.setLocalVote(date, "s-1", false);
+  assert.deepEqual([...(await store.getLocalVotes(date))], []);
+});
+
+test("おすすめの話したい：前に何回も押していた分は「押した」とみなす", async () => {
+  localStorage.setItem(`zatsudan-board:counts:${date}`, JSON.stringify({ "s-old": 3, "s-zero": 0 }));
+  assert.deepEqual([...(await store.getLocalVotes(date))], ["s-old"]);
+});
+
 test("コメント：削除済みのおすすめには書き足さない", async () => {
   const item = await add("消えるもの");
   await store.removeSuggestion(date, item.id);

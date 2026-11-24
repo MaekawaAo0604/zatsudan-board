@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>雑談ボード</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20261124">
 </head>
 <body>
   <header class="site-header">
@@ -17,7 +17,7 @@
   </header>
 
   <main class="container">
-    <p class="notice">押した数・「話した」の印・おすすめとそのコメントは、今はこのブラウザの中だけに保存されます。</p>
+    <p class="notice">毎朝のネタの「話したい」は、みんなで共有されます。「話した」の印、おすすめとそのコメント、おすすめの「話したい」は、このブラウザの中だけに保存されます。</p>
 
     <div class="toolbar">
       <div class="toolbar-actions">
@@ -35,6 +35,7 @@
 
     <p id="pick-result" class="pick-result" role="status"></p>
     <p id="status" class="status" role="status"></p>
+    <p id="vote-status" class="status vote-status" role="status"></p>
     <ul id="topic-list" class="topic-list"></ul>
 
     <section class="suggest" aria-labelledby="suggest-title">
@@ -76,10 +77,9 @@
         </div>
       </div>
       <div class="topic-actions">
-        <button type="button" class="vote-btn">
-          話したい <span class="count">0</span>
+        <button type="button" class="vote-btn" aria-pressed="false">
+          話したい <span class="count">…</span>
         </button>
-        <button type="button" class="undo-btn" aria-label="1つ減らす">−1</button>
         <button type="button" class="done-btn" aria-pressed="false">話した</button>
         <button type="button" class="delete-btn">削除</button>
       </div>
@@ -93,6 +93,7 @@
     </li>
   </template>
 
-  <script type="module" src="app.js"></script>
+  <!-- ?v= は版の印（app.js の先頭の説明を参照） -->
+  <script type="module" src="app.js?v=20261124"></script>
 </body>
 </html>

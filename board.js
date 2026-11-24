@@ -24,6 +24,24 @@ export function pickTopic({ day, suggestions = [], doneIds = [], previousId = nu
   return candidates[Math.floor(random() * candidates.length)];
 }
 
+// 共有する「話したい」の印1件の名前。1人が1つのネタに付けられる印は1つだけなので、ネタとその人で決まる。
+// firestore.rules もこの形を前提にしている
+export function voteDocId(topicId, uid) {
+  return `${topicId}_${uid}`;
+}
+
+// その日の「話したい」の印から、ネタごとの合計と、自分が押したネタを数える。
+// 合計はみんなの分、押した色や取り消しは自分の分だけで決めるため、2つを分けて返す
+export function tallyVotes(votes, uid) {
+  const counts = {};
+  const mine = new Set();
+  for (const vote of votes) {
+    counts[vote.topicId] = (counts[vote.topicId] ?? 0) + 1;
+    if (uid && vote.uid === uid) mine.add(vote.topicId);
+  }
+  return { counts, mine };
+}
+
 // LINE や Slack にそのまま貼れる、飾りのない文字だけのまとめを作る。
 // 対象は「今日のネタ」だけで、おすすめは含めない
 export function buildCopyText({ date, day, suggestions = [], doneIds = [] }) {
