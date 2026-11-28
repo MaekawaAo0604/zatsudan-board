@@ -1,10 +1,11 @@
 // ?v= は版の印。GitHub Pages は各ファイルを10分キャッシュするので、新旧のファイルが混ざらないよう、
 // 変えたときは index.html・app.js・store.js の ?v= をそろえて上げる
-import * as store from "./store.js?v=20261124";
-import { formatDate, dailyTopics, pickTopic, buildCopyText } from "./board.js?v=20261124";
+import * as store from "./store.js?v=20261128";
+import { formatDate, dailyTopics, pickTopic, buildCopyText } from "./board.js?v=20261128";
 
 const els = {
   date: document.getElementById("current-date"),
+  todayBadge: document.getElementById("today-badge"),
   prev: document.getElementById("prev-day"),
   next: document.getElementById("next-day"),
   sort: document.getElementById("sort-order"),
@@ -105,7 +106,13 @@ function currentDate() {
 async function render() {
   const date = currentDate();
   const isToday = date === todayString();
-  els.date.textContent = formatDate(date) + (isToday ? " 今日" : "");
+  // 「今日」は日付の下の印で出す。古い index.html が残っていて印の欄がないときは、前のとおり日付の後ろに付ける
+  if (els.todayBadge) {
+    els.date.textContent = formatDate(date);
+    els.todayBadge.hidden = !isToday;
+  } else {
+    els.date.textContent = formatDate(date) + (isToday ? " 今日" : "");
+  }
   els.prev.disabled = dayIndex <= 0;
   els.next.disabled = dayIndex < 0 || dayIndex >= days.length - 1;
 

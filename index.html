@@ -4,21 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>雑談ボード</title>
-  <link rel="stylesheet" href="style.css?v=20261124">
+  <link rel="stylesheet" href="style.css?v=20261128">
 </head>
 <body>
   <header class="site-header">
     <h1>雑談ボード</h1>
     <nav class="day-nav" aria-label="日付">
       <button type="button" id="prev-day" class="icon-btn" aria-label="前の日">‹</button>
-      <span id="current-date" class="current-date"></span>
+      <span class="current-date-wrap">
+        <span id="current-date" class="current-date"></span>
+        <span id="today-badge" class="today-badge" hidden>今日</span>
+      </span>
       <button type="button" id="next-day" class="icon-btn" aria-label="次の日">›</button>
     </nav>
   </header>
 
   <main class="container">
-    <p class="notice">毎朝のネタの「話したい」は、みんなで共有されます。「話した」の印、おすすめとそのコメント、おすすめの「話したい」は、このブラウザの中だけに保存されます。</p>
-
     <div class="toolbar">
       <div class="toolbar-actions">
         <button type="button" id="random-pick" class="pick-btn">ランダムに1つ選ぶ</button>
@@ -56,6 +57,9 @@
         <button type="submit" class="primary-btn">追加する</button>
       </form>
     </section>
+
+    <!-- ネタを先に見せるため、説明はいちばん下に置く -->
+    <p class="notice">毎朝のネタの「話したい」は、みんなで共有されます。「話した」の印、おすすめとそのコメント、おすすめの「話したい」は、このブラウザの中だけに保存されます。</p>
   </main>
 
   <template id="topic-template">
@@ -76,10 +80,12 @@
           </form>
         </div>
       </div>
+      <!-- 数を上、「話したい」を下に大きく出す（並べ方は style.css） -->
+      <button type="button" class="vote-btn" aria-pressed="false">
+        <span class="count">…</span>
+        <span class="vote-label">話したい</span>
+      </button>
       <div class="topic-actions">
-        <button type="button" class="vote-btn" aria-pressed="false">
-          話したい <span class="count">…</span>
-        </button>
         <button type="button" class="done-btn" aria-pressed="false">話した</button>
         <button type="button" class="delete-btn">削除</button>
       </div>
@@ -94,6 +100,6 @@
   </template>
 
   <!-- ?v= は版の印（app.js の先頭の説明を参照） -->
-  <script type="module" src="app.js?v=20261124"></script>
+  <script type="module" src="app.js?v=20261128"></script>
 </body>
 </html>

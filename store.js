@@ -3,7 +3,7 @@
 // - それ以外（おすすめとそのコメント、おすすめの「話したい」、「話した」の印）：このブラウザの localStorage
 // 分け方の理由は CLAUDE.md の「データの保存」を参照。
 
-import { tallyVotes, voteDocId } from "./board.js?v=20261124"; // ?v= は app.js の説明を参照
+import { tallyVotes, voteDocId } from "./board.js?v=20261128"; // ?v= は app.js の説明を参照
 
 const KEY_PREFIX = "zatsudan-board";
 
@@ -129,7 +129,7 @@ export async function setDailyVote(date, topicId, on) {
 
 // 本物の Firebase。必要になってから読み込むので、読み込めなくても画面のほかの部分は止まらない
 async function loadFirebaseBackend() {
-  const { firebaseConfig } = await import("./firebase-config.js?v=20261124");
+  const { firebaseConfig } = await import("./firebase-config.js?v=20261128");
   if (!firebaseConfig?.projectId) throw new Error("firebase-config.js に設定の値がない");
   const [appSdk, authSdk, fs] = await Promise.all(
     ["app", "auth", "firestore"].map((name) => import(`${FIREBASE_SDK}/firebase-${name}.js`)),
